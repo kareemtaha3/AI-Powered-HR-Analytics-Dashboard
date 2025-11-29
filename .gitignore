@@ -1,0 +1,19 @@
+.DS_Store
+# Ignore dataset folder
+/Data/
+Data/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.env
+.venv/
+venv/
+
+# Byte-compiled / optimized / DLL files
+*.so
