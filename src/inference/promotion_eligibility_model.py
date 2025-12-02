@@ -1,6 +1,5 @@
-
-
-"""Small inference helper for the trained attrition model.
+"""
+Inference helper for the promotion eligibility prediction model.
 
 Provides functions to load the saved pipeline and make predictions from
 Python data structures (dict, DataFrame, numpy arrays).
@@ -14,46 +13,42 @@ import numpy as np
 import pandas as pd
 
 
-DEFAULT_MODEL_PATH = Path("../Models") / "best_attrition_prediction_model_voting.pkl"
+DEFAULT_MODEL_PATH = Path("../Models") / "hr_promotion_model_full_pipeline.pkl"
 
 REQUIRED_COLUMNS = [
-    'Age',
-    'DistanceFromHome',
-    'MonthlyIncome',
-    'EnvironmentSatisfaction',
-    'OverTime',
-    'JobInvolvement',
-    'RelationshipSatisfaction',
-    'WorkLifeBalance',
-    'YearsAtCompany',
-    'YearsInCurrentRole',
-    'YearsSinceLastPromotion',
-    'YearsWithCurrManager',
-    'JobSatisfaction'
+    'age',
+    'no_of_trainings',
+    'previous_year_rating',
+    'length_of_service',
+    'awards_won',
+    'avg_training_score',
+    'department',
+    'education',
+    'gender',
+    'recruitment_channel'
 ]
 
 NUMERIC_FEATURES = [
-    'Age',
-    'DistanceFromHome',
-    'MonthlyIncome',
-    'EnvironmentSatisfaction',
-    'JobInvolvement',
-    'RelationshipSatisfaction',
-    'WorkLifeBalance',
-    'YearsAtCompany',
-    'YearsInCurrentRole',
-    'YearsSinceLastPromotion',
-    'YearsWithCurrManager',
-    'JobSatisfaction'
+    'age',
+    'no_of_trainings',
+    'previous_year_rating',
+    'length_of_service',
+    'awards_won',
+    'avg_training_score'
 ]
 
 CATEGORICAL_FEATURES = [
-    'OverTime'
+    'department',
+    'education',
+    'gender',
+    'recruitment_channel'
 ]
 
-
 CATEGORY_VALUES = {
-    'OverTime': ['Yes', 'No']
+    'department': ['sales', 'operations', 'it', 'analytics', 'finance', 'hr', 'legal', 'procurement'],
+    'education': ['bachelor', 'master', 'phd'],
+    'gender': ['m', 'f'],
+    'recruitment_channel': ['sourcing', 'referred', 'campus']
 }
 
 
@@ -134,18 +129,17 @@ def validate_input(input_data: Any) -> pd.DataFrame:
             f"Provided columns: {list(df.columns)}"
         )
     
-
+    # Make a copy to avoid modifying the original
+    df = df[REQUIRED_COLUMNS].copy()
+    
+    # Normalize categorical features to lowercase for consistency with training data
     for cat_col in CATEGORICAL_FEATURES:
-        if cat_col in df.columns and cat_col in CATEGORY_VALUES:
-            invalid_values = set(df[cat_col].unique()) - set(CATEGORY_VALUES[cat_col])
-            if invalid_values:
-                raise ValueError(
-                    f"Invalid values for '{cat_col}': {invalid_values}\n"
-                    f"Allowed values: {CATEGORY_VALUES[cat_col]}"
-                )
+        if cat_col in df.columns:
+            # Convert to string and lowercase to match training data format
+            df[cat_col] = df[cat_col].astype(str).str.lower().str.strip()
     
 
-    return df[REQUIRED_COLUMNS].copy()
+    return df
 
 
 def get_input_schema() -> Dict[str, Any]:
@@ -170,34 +164,31 @@ def example_input() -> Dict[str, Any]:
     - Dictionary with example values for all required columns
     """
     return {
-        "Age": 35,
-        "DistanceFromHome": 10,
-        "MonthlyIncome": 5000,
-        "EnvironmentSatisfaction": 3,
-        "OverTime": "No",
-        "JobInvolvement": 3,
-        "RelationshipSatisfaction": 3,
-        "WorkLifeBalance": 3,
-        "YearsAtCompany": 5,
-        "YearsInCurrentRole": 2,
-        "YearsSinceLastPromotion": 1,
-        "YearsWithCurrManager": 3,
-        "JobSatisfaction": 3
+        "age": 35,
+        "no_of_trainings": 3,
+        "previous_year_rating": 3.5,
+        "length_of_service": 5,
+        "awards_won": 1,
+        "avg_training_score": 75,
+        "department": "sales",
+        "education": "bachelor",
+        "gender": "m",
+        "recruitment_channel": "referred"
     }
 
 
-def predict_attrition(input_data: Any, model_path: Optional[Union[str, Path]] = None) -> Dict[str, Any]:
-    """Load model (if needed) and predict attrition.
+def predict_promotion(input_data: Any, model_path: Optional[Union[str, Path]] = None) -> Dict[str, Any]:
+    """Load model (if needed) and predict promotion eligibility.
 
     Parameters:
     - input_data: dict, list of dicts, or pandas DataFrame with required columns
     - model_path: optional path to a saved model; default uses the repository default
 
     Returns a dict with keys:
-    - "prediction": "Attrition" or "No Attrition" (or list for multiple inputs)
+    - "prediction": "Promoted" or "Not Promoted" (or list for multiple inputs)
     - "prediction_label": same as prediction (for clarity)
-    - "attrition_probability": probability of attrition (0.0 to 1.0, or list for multiple)
-    - "prediction_numeric": 0 (No Attrition) or 1 (Attrition) - raw model output
+    - "promotion_probability": probability of promotion (0.0 to 1.0, or list for multiple)
+    - "prediction_numeric": 0 (Not Promoted) or 1 (Promoted) - raw model output
     
     Raises:
     - ValueError: if input is missing required columns or has invalid values
@@ -212,7 +203,7 @@ def predict_attrition(input_data: Any, model_path: Optional[Union[str, Path]] = 
     preds = model.predict(X)
     
 
-    pred_labels = ["Attrition" if p == 1 else "No Attrition" for p in preds]
+    pred_labels = ["Promoted" if p == 1 else "Not Promoted" for p in preds]
     
 
     if len(pred_labels) == 1:
@@ -234,17 +225,17 @@ def predict_attrition(input_data: Any, model_path: Optional[Union[str, Path]] = 
             proba = model.predict_proba(X)
 
             if proba.shape[1] == 2:
-                attrition_probs = proba[:, 1]
-                if len(attrition_probs) == 1:
-                    result["attrition_probability"] = float(attrition_probs[0])
+                promotion_probs = proba[:, 1]
+                if len(promotion_probs) == 1:
+                    result["promotion_probability"] = float(promotion_probs[0])
                 else:
-                    result["attrition_probability"] = attrition_probs.tolist()
+                    result["promotion_probability"] = promotion_probs.tolist()
             else:
-                result["attrition_probability"] = proba.tolist()
+                result["promotion_probability"] = proba.tolist()
         except Exception:
-            result["attrition_probability"] = None
+            result["promotion_probability"] = None
     else:
-        result["attrition_probability"] = None
+        result["promotion_probability"] = None
 
     return result
 
@@ -268,7 +259,7 @@ def predict_proba(input_data: Any, model_path: Optional[Union[str, Path]] = None
 
 if __name__ == "__main__":
     # Demo when run as a script
-    print("=== Attrition Prediction Model Helper ===\n")
+    print("=== Promotion Eligibility Prediction Model Helper ===\n")
     
     schema = get_input_schema()
     print("Required columns:", schema["required_columns"])
@@ -291,25 +282,23 @@ if __name__ == "__main__":
     print("\n--- Example prediction output (mock) ---")
     print("If model is available, output would look like:")
     print(json.dumps({
-        "prediction": "Attrition",
-        "prediction_label": "Attrition", 
-        "attrition_probability": 0.73,
+        "prediction": "Promoted",
+        "prediction_label": "Promoted",
+        "promotion_probability": 0.78,
         "prediction_numeric": 1
     }, indent=2))
-    print("\nOr for No Attrition:")
+    print("\nOr for Not Promoted:")
     print(json.dumps({
-        "prediction": "No Attrition",
-        "prediction_label": "No Attrition",
-        "attrition_probability": 0.12,
+        "prediction": "Not Promoted",
+        "prediction_label": "Not Promoted",
+        "promotion_probability": 0.32,
         "prediction_numeric": 0
     }, indent=2))
 
     print("\n--- Testing prediction ---")
     try:
-        result = predict_attrition(example)
+        result = predict_promotion(example)
         print("Predicted label(s):", result['prediction'])
-        print("Predicted probability (positive class):", result['probability'])
+        print("Predicted probability (positive class):", result['promotion_probability'])
     except Exception as e:
         print(f"✗ Prediction failed: {e}")
-    
-
