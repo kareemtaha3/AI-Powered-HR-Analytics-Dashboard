@@ -10,11 +10,16 @@ import plotly.graph_objects as go
 import plotly.express as px
 from pathlib import Path
 import sys
-import joblib
-from sklearn.preprocessing import StandardScaler
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from inference.skill_clustring_model import (
+    SkillClusteringPredictor,
+    SKILL_COLUMNS,
+    CLUSTER_NAMES,
+    CLUSTER_TOP_SKILLS
+)
 
 st.set_page_config(
     page_title="Career Clustering",
@@ -22,9 +27,9 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🎯 Employee Career Clustering")
+st.title("🎯 Employee Skill Clustering")
 st.markdown("""
-Segment employees into distinct career clusters based on skill composition and experience.
+Segment employees into skill-based clusters using their skill composition across 17 technical skills.
 This helps identify similar employee profiles for strategic workforce planning and development.
 """)
 
@@ -33,44 +38,27 @@ st.markdown("---")
 # Load the clustering model
 @st.cache_resource
 def load_clustering_model():
-    model_path = Path(__file__).parent.parent.parent / "Models" / "skill_composition_kmeans_model.pkl"
-    if model_path.exists():
-        return joblib.load(model_path)
-    return None
+    try:
+        predictor = SkillClusteringPredictor()
+        return predictor
+    except Exception as e:
+        st.error(f"Error loading model: {str(e)}")
+        return None
 
-model = load_clustering_model()
+predictor = load_clustering_model()
 
-if model is None:
+if predictor is None:
     st.error("❌ Clustering model not found. Please ensure the model file exists at Models/skill_composition_kmeans_model.pkl")
     st.stop()
 
-# Cluster descriptions (customize based on your data)
+# Use cluster names from the model
 CLUSTER_DESCRIPTIONS = {
-    0: {
-        "name": "Technical Specialists",
-        "description": "Employees with deep technical expertise and specialized skills",
-        "characteristics": ["High technical skills", "Specialized knowledge", "Expert-level proficiency"]
-    },
-    1: {
-        "name": "Generalists",
-        "description": "Well-rounded employees with broad skill sets across multiple domains",
-        "characteristics": ["Diverse skills", "Adaptable", "Multi-functional capabilities"]
-    },
-    2: {
-        "name": "Junior Professionals",
-        "description": "Early-career employees with foundational skills and growth potential",
-        "characteristics": ["Developing skills", "High learning potential", "Entry to mid-level experience"]
-    },
-    3: {
-        "name": "Senior Leaders",
-        "description": "Experienced employees with extensive expertise and leadership capabilities",
-        "characteristics": ["Advanced expertise", "Leadership skills", "Strategic capabilities"]
-    },
-    4: {
-        "name": "Specialized Analysts",
-        "description": "Employees with analytical and specialized domain expertise",
-        "characteristics": ["Analytical skills", "Domain expertise", "Focused specialization"]
+    cluster_id: {
+        "name": CLUSTER_NAMES[cluster_id],
+        "description": f"Employees with focus on: {', '.join(CLUSTER_TOP_SKILLS[cluster_id][:3])}",
+        "top_skills": CLUSTER_TOP_SKILLS[cluster_id]
     }
+    for cluster_id in CLUSTER_NAMES.keys()
 }
 
 # Create tabs
@@ -78,110 +66,99 @@ tab1, tab2, tab3, tab4 = st.tabs(["Single Assignment", "Batch Clustering", "Clus
 
 # Tab 1: Single Prediction
 with tab1:
-    st.header("Assign Employee to Career Cluster")
+    st.header("Assign Employee to Skill Cluster")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("📋 Input Employee Profile")
+        st.subheader("📋 Input Employee Skill Ratings")
+        st.info("Rate each skill from 1-10 based on proficiency level")
         
-        # Basic Information
-        st.write("**Basic Information**")
-        employee_name = st.text_input("Employee Name", "Employee")
-        age = st.slider("Age", min_value=20, max_value=65, value=35, step=1)
-        department = st.selectbox("Department", ["Sales", "HR", "Technical", "Finance", "Operations", "R&D"])
+        # Create skill input for all 17 skills
+        skill_values = {}
         
-        st.write("**Experience & Tenure**")
-        years_at_company = st.slider("Years At Company", min_value=0, max_value=40, value=5, step=1)
-        total_experience = st.slider("Total Work Experience (years)", min_value=0, max_value=50, value=10, step=1)
-        
-        st.write("**Skill Levels (1-5 scale)**")
+        # Split skills into two columns for better layout
         col_a, col_b = st.columns(2)
         
+        mid_point = len(SKILL_COLUMNS) // 2
+        
         with col_a:
-            technical_skill = st.slider("Technical Skills", min_value=1, max_value=5, value=3)
-            analytical_skill = st.slider("Analytical Skills", min_value=1, max_value=5, value=3)
-            communication_skill = st.slider("Communication Skills", min_value=1, max_value=5, value=3)
+            for skill in SKILL_COLUMNS[:mid_point]:
+                skill_values[skill] = st.slider(
+                    skill,
+                    min_value=1,
+                    max_value=10,
+                    value=5,
+                    step=1,
+                    key=f"skill_{skill}"
+                )
         
         with col_b:
-            leadership_skill = st.slider("Leadership Skills", min_value=1, max_value=5, value=2)
-            domain_expertise = st.slider("Domain Expertise", min_value=1, max_value=5, value=3)
-            learning_agility = st.slider("Learning Agility", min_value=1, max_value=5, value=3)
-        
-        st.write("**Performance**")
-        performance_rating = st.slider("Performance Rating (1-5)", min_value=1, max_value=5, value=3)
-        certifications = st.number_input("Professional Certifications", min_value=0, max_value=10, value=1, step=1)
+            for skill in SKILL_COLUMNS[mid_point:]:
+                skill_values[skill] = st.slider(
+                    skill,
+                    min_value=1,
+                    max_value=10,
+                    value=5,
+                    step=1,
+                    key=f"skill_{skill}"
+                )
     
     with col2:
         st.subheader("🎯 Cluster Assignment")
         
-        # Prepare input data
-        input_data = {
-            'Age': age,
-            'YearsAtCompany': years_at_company,
-            'TotalExperience': total_experience,
-            'TechnicalSkill': technical_skill,
-            'AnalyticalSkill': analytical_skill,
-            'CommunicationSkill': communication_skill,
-            'LeadershipSkill': leadership_skill,
-            'DomainExpertise': domain_expertise,
-            'LearningAgility': learning_agility,
-            'PerformanceRating': performance_rating,
-            'Certifications': certifications
-        }
-        
         if st.button("🎯 Assign to Cluster", use_container_width=True, type="primary"):
             try:
-                # Prepare data for prediction
-                input_df = pd.DataFrame([input_data])
+                # Use the predictor's predict method
+                result = predictor.predict(skill_values)
                 
-                # Predict cluster
-                cluster_id = model.predict(input_df)[0]
+                cluster_id = result['cluster_id']
+                cluster_name = result['cluster_name']
+                top_skills = result['top_skills']
                 
                 # Get cluster info
                 cluster_info = CLUSTER_DESCRIPTIONS.get(cluster_id, {
-                    "name": f"Cluster {cluster_id}",
-                    "description": "Distinct career path profile",
-                    "characteristics": []
+                    "name": cluster_name,
+                    "description": f"Skill cluster {cluster_id}",
+                    "top_skills": top_skills
                 })
                 
                 # Display assignment
                 st.success(f"✅ **{cluster_info['name']}**", icon="✅")
                 st.write(f"**Description**: {cluster_info['description']}")
                 
-                # Display characteristics
-                st.write("**Key Characteristics**:")
-                for char in cluster_info['characteristics']:
-                    st.write(f"• {char}")
+                # Display top skills for this cluster
+                st.write("**Top Skills for this Cluster**:")
+                for skill in top_skills[:5]:
+                    st.write(f"• {skill}")
                 
-                # Skill Profile
-                st.subheader("📊 Skill Profile")
-                skill_data = {
-                    'Skill': ['Technical', 'Analytical', 'Communication', 'Leadership', 'Domain Expertise', 'Learning Agility'],
-                    'Level': [technical_skill, analytical_skill, communication_skill, leadership_skill, domain_expertise, learning_agility]
-                }
+                # Skill Profile - show top 8 skills as radar
+                st.subheader("📊 Your Skill Profile")
+                top_8_skills = list(skill_values.keys())[:8]
+                top_8_values = [skill_values[s] for s in top_8_skills]
                 
                 fig = go.Figure(data=[
                     go.Scatterpolar(
-                        r=skill_data['Level'],
-                        theta=skill_data['Skill'],
+                        r=top_8_values,
+                        theta=top_8_skills,
                         fill='toself',
                         name='Skill Level'
                     )
                 ])
                 
                 fig.update_layout(
-                    polar=dict(radialaxis=dict(visible=True, range=[0, 5])),
+                    polar=dict(radialaxis=dict(visible=True, range=[0, 10])),
                     height=400,
-                    showlegend=False
+                    showlegend=False,
+                    title="Top 8 Skills"
                 )
                 st.plotly_chart(fig, use_container_width=True)
                 
-                # Employee summary
-                st.subheader("📋 Employee Summary")
+                # Employee summary - show all skills
+                st.subheader("📋 All Skill Ratings")
                 summary_df = pd.DataFrame({
-                    'Attribute': list(input_data.keys()),
-                    'Value': list(input_data.values())
+                    'Skill': list(skill_values.keys()),
+                    'Rating': list(skill_values.values())
                 })
                 st.dataframe(summary_df, use_container_width=True, hide_index=True)
                 
@@ -204,8 +181,9 @@ with tab1:
 
 # Tab 2: Batch Clustering
 with tab2:
-    st.header("Batch Career Clustering")
+    st.header("Batch Skill Clustering")
     st.write("Upload a CSV file to cluster multiple employees at once.")
+    st.info(f"CSV must contain all {len(SKILL_COLUMNS)} skill columns: {', '.join(SKILL_COLUMNS[:3])}...")
     
     uploaded_file = st.file_uploader("Upload CSV file", type=['csv'])
     
@@ -220,21 +198,28 @@ with tab2:
             
             if st.button("🎯 Cluster All Employees", type="primary", use_container_width=True):
                 try:
-                    cluster_assignments = []
+                    results_list = []
                     
                     with st.spinner("Clustering employees..."):
-                        try:
-                            cluster_assignments = model.predict(df)
-                        except:
-                            st.error("Clustering failed - please ensure all required columns are present")
-                            st.stop()
+                        for idx, row in df.iterrows():
+                            try:
+                                # Convert row to dict with just skill columns
+                                skill_dict = {skill: row[skill] for skill in SKILL_COLUMNS if skill in row}
+                                result = predictor.predict(skill_dict)
+                                results_list.append({
+                                    'Row': idx + 1,
+                                    'Cluster_ID': result['cluster_id'],
+                                    'Cluster_Name': result['cluster_name']
+                                })
+                            except Exception as e:
+                                results_list.append({
+                                    'Row': idx + 1,
+                                    'Cluster_ID': None,
+                                    'Cluster_Name': f"Error: {str(e)}"
+                                })
                     
-                    # Add results to dataframe
-                    results_df = df.copy()
-                    results_df['Cluster'] = cluster_assignments
-                    results_df['Cluster_Name'] = results_df['Cluster'].apply(
-                        lambda x: CLUSTER_DESCRIPTIONS.get(x, {"name": f"Cluster {x}"})["name"]
-                    )
+                    # Create results dataframe
+                    results_df = pd.DataFrame(results_list)
                     
                     st.success(f"✅ Clustering completed for {len(df)} employees")
                     
@@ -244,7 +229,8 @@ with tab2:
                     
                     # Cluster statistics
                     st.subheader("📊 Cluster Statistics")
-                    cluster_counts = results_df['Cluster_Name'].value_counts().sort_index()
+                    valid_results = results_df[results_df['Cluster_ID'].notna()]
+                    cluster_counts = valid_results['Cluster_Name'].value_counts()
                     
                     col1, col2 = st.columns(2)
                     

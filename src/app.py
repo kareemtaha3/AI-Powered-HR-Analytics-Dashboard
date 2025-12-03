@@ -48,7 +48,10 @@ pages = {
     "📊 Dashboard": "dashboard",
     "👥 Attrition Prediction": "attrition",
     "📈 Promotion Eligibility": "promotion",
-    "🎯 Career Clustering": "clustering"
+    "🎯 Skill Clustering": "clustering",
+    "⭐ Performance Classification": "performance",
+    "💰 Salary Prediction": "salary",
+    "🎯 Employee Engagement": "engagement"
 }
 
 selected_page = st.sidebar.radio("Select Model", list(pages.keys()), label_visibility="collapsed")
@@ -71,9 +74,9 @@ if selected_page == "📊 Dashboard":
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.metric("Models Available", "3", "Active")
+        st.metric("Models Available", "6", "Active")
     with col2:
-        st.metric("Features", "13+", "Per Model")
+        st.metric("Features", "7-17", "Per Model")
     with col3:
         st.metric("Predictions", "Real-time", "Instant")
     
@@ -108,9 +111,9 @@ if selected_page == "📊 Dashboard":
         <div class='model-description'>
         Assess employee promotion eligibility based on:
         • Performance metrics and ratings
-        • Tenure and role tenure
-        • Salary and compensation
-        • Previous promotions and career growth
+        • Training and development
+        • Length of service and awards
+        • Age, department, and education
         
         **Use Case**: Identify promotion-ready employees for talent development
         </div>
@@ -118,23 +121,77 @@ if selected_page == "📊 Dashboard":
     with col2:
         st.markdown("**Type**: Classification\n\n**Output**: Eligibility Score")
     
-    # Clustering Model
+    # Skill Clustering Model
     col1, col2 = st.columns([2, 1])
     with col1:
-        st.subheader("🎯 Career Path Clustering")
+        st.subheader("🎯 Skill Composition Clustering")
         st.markdown("""
         <div class='model-description'>
-        Segment employees into career clusters based on:
-        • Skill composition and expertise
-        • Experience levels and specializations
-        • Career trajectories
-        • Role distributions
+        Segment employees into skill-based clusters using:
+        • 17 technical skill ratings
+        • Skill composition patterns
+        • Technical specializations
+        • Career path analysis
         
-        **Use Case**: Identify similar employee profiles for strategic planning
+        **Use Case**: Identify similar employee skill profiles for strategic planning
         </div>
         """, unsafe_allow_html=True)
     with col2:
-        st.markdown("**Type**: Clustering\n\n**Output**: Cluster ID")
+        st.markdown("**Type**: Clustering\n\n**Output**: Cluster Assignment")
+    
+    # Performance Classification
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.subheader("⭐ Performance Classification")
+        st.markdown("""
+        <div class='model-description'>
+        Predict employee performance rating based on:
+        • Job and environment satisfaction
+        • Work-life balance
+        • Monthly income and tenure
+        • Education and training
+        
+        **Use Case**: Assess performance for reviews and development plans
+        </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        st.markdown("**Type**: Classification\n\n**Output**: Performance Rating")
+    
+    # Salary Prediction
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.subheader("💰 Salary Prediction")
+        st.markdown("""
+        <div class='model-description'>
+        Estimate annual developer salary using:
+        • Years of professional coding experience
+        • Country and location
+        • Education level
+        • Developer type and primary language
+        
+        **Use Case**: Benchmark compensation and plan hiring budgets
+        </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        st.markdown("**Type**: Regression\n\n**Output**: Salary Estimate")
+    
+    # Employee Engagement
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.subheader("🎯 Employee Engagement Clustering")
+        st.markdown("""
+        <div class='model-description'>
+        Segment employees by engagement levels using:
+        • Job involvement and satisfaction
+        • Career progression and promotion rate
+        • Compensation and benefits
+        • Tenure and experience
+        
+        **Use Case**: Target retention and development strategies by engagement level
+        </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        st.markdown("**Type**: Clustering\n\n**Output**: Engagement Cluster")
     
     st.markdown("---")
     
@@ -143,16 +200,22 @@ if selected_page == "📊 Dashboard":
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("🚀 Try Attrition Prediction", use_container_width=True):
+        if st.button("🚀 Attrition Prediction", use_container_width=True):
             st.switch_page("pages/01_attrition_prediction.py")
+        if st.button("⭐ Performance Classification", use_container_width=True):
+            st.switch_page("pages/04_performance_classification.py")
     
     with col2:
-        if st.button("📊 Try Promotion Eligibility", use_container_width=True):
+        if st.button("📊 Promotion Eligibility", use_container_width=True):
             st.switch_page("pages/02_promotion_eligibility.py")
+        if st.button("💰 Salary Prediction", use_container_width=True):
+            st.switch_page("pages/05_salary_prediction.py")
     
     with col3:
-        if st.button("🎯 Try Career Clustering", use_container_width=True):
+        if st.button("🎯 Skill Clustering", use_container_width=True):
             st.switch_page("pages/03_career_clustering.py")
+        if st.button("🎯 Employee Engagement", use_container_width=True):
+            st.switch_page("pages/06_employee_engagement.py")
     
     st.markdown("---")
     st.info(
@@ -187,10 +250,34 @@ elif selected_page == "📈 Promotion Eligibility":
     except Exception as e:
         st.error(f"Error loading promotion eligibility page: {e}")
 
-elif selected_page == "🎯 Career Clustering":
+elif selected_page == "🎯 Skill Clustering":
     try:
         exec(open(Path(__file__).parent / "pages" / "03_career_clustering.py").read())
     except FileNotFoundError:
         st.error("Career clustering page not found. Please ensure the pages directory is properly set up.")
     except Exception as e:
         st.error(f"Error loading career clustering page: {e}")
+
+elif selected_page == "⭐ Performance Classification":
+    try:
+        exec(open(Path(__file__).parent / "pages" / "04_performance_classification.py").read())
+    except FileNotFoundError:
+        st.error("Performance classification page not found. Please ensure the pages directory is properly set up.")
+    except Exception as e:
+        st.error(f"Error loading performance classification page: {e}")
+
+elif selected_page == "💰 Salary Prediction":
+    try:
+        exec(open(Path(__file__).parent / "pages" / "05_salary_prediction.py").read())
+    except FileNotFoundError:
+        st.error("Salary prediction page not found. Please ensure the pages directory is properly set up.")
+    except Exception as e:
+        st.error(f"Error loading salary prediction page: {e}")
+
+elif selected_page == "🎯 Employee Engagement":
+    try:
+        exec(open(Path(__file__).parent / "pages" / "06_employee_engagement.py").read())
+    except FileNotFoundError:
+        st.error("Employee engagement page not found. Please ensure the pages directory is properly set up.")
+    except Exception as e:
+        st.error(f"Error loading employee engagement page: {e}")
