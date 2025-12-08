@@ -14,7 +14,9 @@ import numpy as np
 import pandas as pd
 
 
-DEFAULT_MODEL_PATH = Path("../Models") / "best_attrition_prediction_model_voting.pkl"
+# Default model path - resolve from this file's location
+_base_dir = Path(__file__).resolve().parent.parent.parent
+DEFAULT_MODEL_PATH = _base_dir / "Models" / "best_attrition_prediction_model_voting.pkl"
 
 REQUIRED_COLUMNS = [
     'Age',

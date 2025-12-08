@@ -121,19 +121,19 @@ with tab1:
                             'axis': {'range': [0, 100]},
                             'bar': {'color': risk_color},
                             'steps': [
-                                {'range': [0, 33], 'color': "lightgreen"},
-                                {'range': [33, 66], 'color': "lightyellow"},
-                                {'range': [66, 100], 'color': "lightcoral"}
+                                {'range': [0, 33], 'color': "#2d5016"},
+                                {'range': [33, 66], 'color': "#5c4813"},
+                                {'range': [66, 100], 'color': "#5c1a1a"}
                             ],
                             'threshold': {
-                                'line': {'color': "red", 'width': 4},
+                                'line': {'color': "#ff6b6b", 'width': 4},
                                 'thickness': 0.75,
                                 'value': 50
                             }
                         },
                         domain={'x': [0, 1], 'y': [0, 1]}
                     ))
-                    fig.update_layout(height=400)
+                    fig.update_layout(height=400, template="plotly_dark")
                     st.plotly_chart(fig, use_container_width=True)
                     
                     st.metric("Attrition Probability", f"{probability*100:.1f}%", f"Risk Level: {risk_level}")
@@ -234,20 +234,22 @@ with tab2:
                                 values=[attrition_count, len(df) - attrition_count],
                                 names=['At-Risk (Likely Attrition)', 'Safe (Likely to Stay)'],
                                 title="Employee Distribution",
-                                color_discrete_map={'At-Risk (Likely Attrition)': '#EF553B', 'Safe (Likely to Stay)': '#00CC96'}
+                                color_discrete_map={'At-Risk (Likely Attrition)': '#ff6b6b', 'Safe (Likely to Stay)': '#51cf66'},
+                                template="plotly_dark"
                             )
                             st.plotly_chart(fig, use_container_width=True)
                         
                         with col2:
                             # Histogram of probabilities
                             fig = go.Figure(data=[
-                                go.Histogram(x=probabilities, nbinsx=20, name='Attrition Probability')
+                                go.Histogram(x=probabilities, nbinsx=20, name='Attrition Probability', marker_color='#4dabf7')
                             ])
                             fig.update_layout(
                                 title="Distribution of Attrition Probabilities",
                                 xaxis_title="Probability",
                                 yaxis_title="Count",
-                                showlegend=False
+                                showlegend=False,
+                                template="plotly_dark"
                             )
                             st.plotly_chart(fig, use_container_width=True)
                         

@@ -131,16 +131,16 @@ with tab1:
                     title={'text': "Annual Salary (USD)"},
                     gauge={
                         'axis': {'range': [0, min(predicted_salary * 2, 500000)]},
-                        'bar': {'color': "darkgreen"},
+                        'bar': {'color': "#51cf66"},
                         'steps': [
-                            {'range': [0, 50000], 'color': "lightgray"},
-                            {'range': [50000, 100000], 'color': "lightblue"},
-                            {'range': [100000, 150000], 'color': "lightgreen"},
-                            {'range': [150000, 500000], 'color': "gold"}
+                            {'range': [0, 50000], 'color': "#2d2d2d"},
+                            {'range': [50000, 100000], 'color': "#1a4d6d"},
+                            {'range': [100000, 150000], 'color': "#2d5016"},
+                            {'range': [150000, 500000], 'color': "#5c4813"}
                         ]
                     }
                 ))
-                fig.update_layout(height=400)
+                fig.update_layout(height=400, template="plotly_dark")
                 st.plotly_chart(fig, use_container_width=True)
                 
                 # Salary breakdown
@@ -270,7 +270,9 @@ with tab2:
                             x='Predicted_Salary',
                             nbins=30,
                             title='Salary Distribution',
-                            labels={'Predicted_Salary': 'Annual Salary (USD)'}
+                            labels={'Predicted_Salary': 'Annual Salary (USD)'},
+                            template="plotly_dark",
+                            color_discrete_sequence=['#4dabf7']
                         )
                         st.plotly_chart(fig, use_container_width=True)
                         

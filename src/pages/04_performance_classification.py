@@ -142,7 +142,8 @@ with tab1:
                         y="Probability",
                         title="Performance Rating Probabilities",
                         color="Probability",
-                        color_continuous_scale="Blues"
+                        color_continuous_scale="Blues",
+                        template="plotly_dark"
                     )
                     fig.update_layout(height=300)
                     st.plotly_chart(fig, use_container_width=True)
@@ -258,7 +259,9 @@ with tab2:
                             dist_df,
                             values='Count',
                             names='Performance',
-                            title='Performance Distribution'
+                            title='Performance Distribution',
+                            template="plotly_dark",
+                            color_discrete_sequence=px.colors.qualitative.Set3
                         )
                         st.plotly_chart(fig, use_container_width=True)
                         

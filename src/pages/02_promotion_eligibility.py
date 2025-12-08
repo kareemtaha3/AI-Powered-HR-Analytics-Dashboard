@@ -49,7 +49,7 @@ with tab1:
     
     with col1:
         st.subheader("📋 Input Employee Data")
-        
+        print(CATEGORICAL_FEATURES, CATEGORY_VALUES)
         # Numeric inputs
         st.write("**Basic Information**")
         age = st.slider("Age", min_value=18, max_value=65, value=35, step=1)
@@ -114,19 +114,19 @@ with tab1:
                             'axis': {'range': [0, 100]},
                             'bar': {'color': prob_color},
                             'steps': [
-                                {'range': [0, 40], 'color': "lightcoral"},
-                                {'range': [40, 70], 'color': "lightyellow"},
-                                {'range': [70, 100], 'color': "lightgreen"}
+                                {'range': [0, 40], 'color': "#5c1a1a"},
+                                {'range': [40, 70], 'color': "#5c4813"},
+                                {'range': [70, 100], 'color': "#2d5016"}
                             ],
                             'threshold': {
-                                'line': {'color': "blue", 'width': 4},
+                                'line': {'color': "#4dabf7", 'width': 4},
                                 'thickness': 0.75,
                                 'value': 50
                             }
                         },
                         domain={'x': [0, 1], 'y': [0, 1]}
                     ))
-                    fig.update_layout(height=400)
+                    fig.update_layout(height=400, template="plotly_dark")
                     st.plotly_chart(fig, use_container_width=True)
                     
                     st.metric("Eligibility Score", f"{probability*100:.1f}%")
@@ -230,7 +230,8 @@ with tab2:
                                 values=[eligible_count, len(df) - eligible_count],
                                 names=['Promotion Eligible', 'Not Yet Eligible'],
                                 title="Promotion Eligibility Distribution",
-                                color_discrete_map={'Promotion Eligible': '#00CC96', 'Not Yet Eligible': '#FFA15A'}
+                                color_discrete_map={'Promotion Eligible': '#51cf66', 'Not Yet Eligible': '#ff8787'},
+                                template="plotly_dark"
                             )
                             st.plotly_chart(fig, use_container_width=True)
                         
@@ -239,13 +240,14 @@ with tab2:
                             if any(p is not None for p in probabilities):
                                 valid_probs = [p for p in probabilities if p is not None]
                                 fig = go.Figure(data=[
-                                    go.Histogram(x=valid_probs, nbinsx=20, name='Eligibility Score')
+                                    go.Histogram(x=valid_probs, nbinsx=20, name='Eligibility Score', marker_color='#4dabf7')
                                 ])
                                 fig.update_layout(
                                     title="Distribution of Eligibility Scores",
                                     xaxis_title="Score",
                                     yaxis_title="Count",
-                                    showlegend=False
+                                    showlegend=False,
+                                    template="plotly_dark"
                                 )
                                 st.plotly_chart(fig, use_container_width=True)
                         
