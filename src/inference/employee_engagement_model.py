@@ -15,7 +15,7 @@ import pandas as pd
 
 # Default model path - resolve from this file's location
 _base_dir = Path(__file__).resolve().parent.parent.parent
-DEFAULT_MODEL_PATH = _base_dir / "Models" / "employee_engagement_kmeans_model.pkl"
+DEFAULT_MODEL_PATH = _base_dir / "Models" / "employee_engagement_clustering.pkl"
 DEFAULT_SCALER_PATH = _base_dir / "Models" / "employee_engagement_scaler.pkl"
 
 # Required input columns (features used in clustering)
@@ -48,7 +48,7 @@ CATEGORICAL_FEATURES = [
     'JobRole_enc'
 ]
 
-# Cluster names and descriptions (from notebook analysis)
+# Cluster names and descriptions (from notebook analysis - final_k = 4)
 CLUSTER_DESCRIPTIONS = {
     0: {
         "name": "Highly Engaged & Loyal",
@@ -108,11 +108,28 @@ def get_scaler_path(path: Optional[Union[str, Path]] = None) -> Path:
 
 
 def load_model(model_path: Optional[Union[str, Path]] = None):
-    """Load and return the trained clustering model from disk."""
+    """Load and return the trained clustering model from disk.
+    
+    Returns:
+        The KMeans model object
+    """
     p = get_model_path(model_path)
     if not p.exists():
         raise FileNotFoundError(f"Model file not found: {p}")
-    return joblib.load(p)
+    
+    loaded_obj = joblib.load(p)
+    
+    # Check what was loaded
+    if isinstance(loaded_obj, np.ndarray):
+        # This is likely the old format where cluster labels were saved
+        # instead of the model. We need to retrain or use a fallback.
+        raise ValueError(
+            "The saved file contains cluster labels instead of the model object. "
+            "Please re-run the notebook cell that saves the model with: "
+            "joblib.dump(kmeans, '../Models/employee_engagement_clustering.pkl')"
+        )
+    
+    return loaded_obj
 
 
 def load_scaler(scaler_path: Optional[Union[str, Path]] = None):

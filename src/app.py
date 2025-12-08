@@ -14,27 +14,29 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Add custom CSS for better styling
+# Add custom CSS for better styling (Dark Mode Optimized)
 st.markdown("""
     <style>
     .main-header {
         font-size: 2.5rem;
         font-weight: bold;
-        color: #1f77b4;
+        color: #4dabf7;
         margin-bottom: 1rem;
     }
     .metric-card {
-        background-color: #f0f2f6;
+        background-color: #1e1e1e;
         padding: 1.5rem;
         border-radius: 0.5rem;
         margin: 0.5rem 0;
+        border: 1px solid #2d2d2d;
     }
     .model-description {
-        background-color: #e8f4f8;
+        background-color: #1a2332;
         padding: 1rem;
-        border-left: 4px solid #1f77b4;
+        border-left: 4px solid #4dabf7;
         border-radius: 0.3rem;
         margin: 1rem 0;
+        color: #e0e0e0;
     }
     </style>
 """, unsafe_allow_html=True)

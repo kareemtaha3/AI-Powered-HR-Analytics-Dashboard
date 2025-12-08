@@ -87,7 +87,7 @@ with tab1:
                 skill_values[skill] = st.slider(
                     skill,
                     min_value=1,
-                    max_value=10,
+                    max_value=7,
                     value=5,
                     step=1,
                     key=f"skill_{skill}"
@@ -98,7 +98,7 @@ with tab1:
                 skill_values[skill] = st.slider(
                     skill,
                     min_value=1,
-                    max_value=10,
+                    max_value=7,
                     value=5,
                     step=1,
                     key=f"skill_{skill}"
@@ -110,7 +110,7 @@ with tab1:
         if st.button("🎯 Assign to Cluster", use_container_width=True, type="primary"):
             try:
                 # Use the predictor's predict method
-                result = predictor.predict(skill_values)
+                result = predictor.predict_cluster(skill_values, include_details=False)
                 
                 cluster_id = result['cluster_id']
                 cluster_name = result['cluster_name']
@@ -142,7 +142,9 @@ with tab1:
                         r=top_8_values,
                         theta=top_8_skills,
                         fill='toself',
-                        name='Skill Level'
+                        name='Skill Level',
+                        line_color='#4dabf7',
+                        fillcolor='rgba(77, 171, 247, 0.3)'
                     )
                 ])
                 
@@ -150,7 +152,8 @@ with tab1:
                     polar=dict(radialaxis=dict(visible=True, range=[0, 10])),
                     height=400,
                     showlegend=False,
-                    title="Top 8 Skills"
+                    title="Top 8 Skills",
+                    template="plotly_dark"
                 )
                 st.plotly_chart(fig, use_container_width=True)
                 
@@ -240,7 +243,9 @@ with tab2:
                             values=cluster_counts.values,
                             names=cluster_counts.index,
                             title="Employee Distribution by Cluster",
-                            hole=0.3
+                            hole=0.3,
+                            template="plotly_dark",
+                            color_discrete_sequence=px.colors.qualitative.Set3
                         )
                         st.plotly_chart(fig, use_container_width=True)
                     
@@ -250,15 +255,17 @@ with tab2:
                             go.Bar(
                                 x=cluster_counts.index,
                                 y=cluster_counts.values,
-                                marker_color='indianred'
+                                marker_color='#66d9ef'
                             )
                         ])
                         fig.update_layout(
                             title="Employees per Cluster",
                             xaxis_title="Cluster",
                             yaxis_title="Count",
-                            showlegend=False
+                            showlegend=False,
+                            template="plotly_dark"
                         )
+                        
                         st.plotly_chart(fig, use_container_width=True)
                     
                     # Cluster details
@@ -298,9 +305,9 @@ with tab3:
             
             with col1:
                 st.write(f"**Description**: {info['description']}")
-                st.write("**Key Characteristics**:")
-                for char in info['characteristics']:
-                    st.write(f"• {char}")
+                st.write("**Top Skills**:")
+                for skill in info['top_skills']:
+                    st.write(f"• {skill}")
             
             with col2:
                 st.write("**Typical Profile**:")

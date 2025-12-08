@@ -46,11 +46,49 @@ CATEGORICAL_FEATURES = [
     'recruitment_channel'
 ]
 
+# Exact category values as learned by the model (sorted alphabetically as in the encoder)
 CATEGORY_VALUES = {
-    'department': ['sales', 'operations', 'it', 'analytics', 'finance', 'hr', 'legal', 'procurement'],
-    'education': ['bachelor', 'master', 'phd'],
-    'gender': ['m', 'f'],
-    'recruitment_channel': ['sourcing', 'referred', 'campus']
+    'department': ['Analytics', 'Finance', 'HR', 'Legal', 'Operations', 'Procurement', 'R&D', 'Sales & Marketing', 'Technology'],
+    'education': ["Bachelor's", 'Below Secondary', "Master's & above"],
+    'gender': ['f', 'm'],
+    'recruitment_channel': ['other', 'referred', 'sourcing']
+}
+
+# Mapping for case-insensitive and user-friendly input
+CATEGORY_MAPPINGS = {
+    'department': {
+        'analytics': 'Analytics',
+        'finance': 'Finance',
+        'hr': 'HR',
+        'legal': 'Legal',
+        'operations': 'Operations',
+        'procurement': 'Procurement',
+        'r&d': 'R&D',
+        'sales & marketing': 'Sales & Marketing',
+        'sales &marketing': 'Sales & Marketing',
+        'sales& marketing': 'Sales & Marketing',
+        'sales&marketing': 'Sales & Marketing',
+        'technology': 'Technology',
+    },
+    'education': {
+        "master's & above": "Master's & above",
+        "masters & above": "Master's & above",
+        "master's and above": "Master's & above",
+        "bachelor's": "Bachelor's",
+        "bachelors": "Bachelor's",
+        'below secondary': 'Below Secondary',
+    },
+    'gender': {
+        'f': 'f',
+        'female': 'f',
+        'm': 'm',
+        'male': 'm',
+    },
+    'recruitment_channel': {
+        'other': 'other',
+        'referred': 'referred',
+        'sourcing': 'sourcing',
+    }
 }
 
 
@@ -134,13 +172,30 @@ def validate_input(input_data: Any) -> pd.DataFrame:
     # Make a copy to avoid modifying the original
     df = df[REQUIRED_COLUMNS].copy()
     
-    # Normalize categorical features to lowercase for consistency with training data
+    # Normalize categorical features using the mapping to match exact model values
     for cat_col in CATEGORICAL_FEATURES:
         if cat_col in df.columns:
-            # Convert to string and lowercase to match training data format
-            df[cat_col] = df[cat_col].astype(str).str.lower().str.strip()
+            # Convert to string, lowercase, and strip whitespace
+            original_values = df[cat_col].astype(str).str.lower().str.strip()
+            
+            # Map to exact values expected by the model
+            if cat_col in CATEGORY_MAPPINGS:
+                mapped_values = original_values.map(CATEGORY_MAPPINGS[cat_col])
+                
+                # Check for any unmapped values (NaN after mapping)
+                invalid_mask = mapped_values.isna()
+                if invalid_mask.any():
+                    invalid_inputs = original_values[invalid_mask].unique()
+                    valid_values = list(CATEGORY_MAPPINGS[cat_col].keys())
+                    raise ValueError(
+                        f"Invalid values for '{cat_col}': {invalid_inputs.tolist()}\n"
+                        f"Valid values (case-insensitive): {valid_values}\n"
+                        f"Exact values expected by model: {CATEGORY_VALUES[cat_col]}"
+                    )
+                
+                # Apply the mapping
+                df[cat_col] = mapped_values
     
-
     return df
 
 
@@ -172,8 +227,8 @@ def example_input() -> Dict[str, Any]:
         "length_of_service": 5,
         "awards_won": 1,
         "avg_training_score": 75,
-        "department": "sales",
-        "education": "bachelor",
+        "department": "sales & marketing",  # Case-insensitive, will be mapped to 'Sales & Marketing'
+        "education": "bachelor's",  # Will be mapped to "Bachelor's"
         "gender": "m",
         "recruitment_channel": "referred"
     }

@@ -154,13 +154,15 @@ with tab1:
                     r=values,
                     theta=categories,
                     fill='toself',
-                    line_color=color
+                    line_color='#4dabf7',
+                    fillcolor='rgba(77, 171, 247, 0.3)'
                 ))
                 fig.update_layout(
                     polar=dict(radialaxis=dict(visible=True, range=[0, 1])),
                     showlegend=False,
                     title="Employee Profile",
-                    height=400
+                    height=400,
+                    template="plotly_dark"
                 )
                 st.plotly_chart(fig, use_container_width=True)
                 
@@ -298,7 +300,9 @@ with tab2:
                                 cluster_counts,
                                 values='Count',
                                 names='Cluster',
-                                title='Cluster Distribution'
+                                title='Cluster Distribution',
+                                template="plotly_dark",
+                                color_discrete_sequence=px.colors.qualitative.Set3
                             )
                             st.plotly_chart(fig, use_container_width=True)
                         
@@ -308,7 +312,9 @@ with tab2:
                                 cluster_counts,
                                 x='Cluster',
                                 y='Count',
-                                title='Employee Count by Cluster'
+                                title='Employee Count by Cluster',
+                                template="plotly_dark",
+                                color_discrete_sequence=['#4dabf7']
                             )
                             st.plotly_chart(fig, use_container_width=True)
                         
