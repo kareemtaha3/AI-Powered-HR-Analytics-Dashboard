@@ -673,22 +673,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 👥 Authors
-
-- **Kareem Taha** - [GitHub](https://github.com/kareemtaha3)
-
----
-
-## 🙏 Acknowledgments
-
-- **IBM Watson Analytics** for the HR dataset
-- **Stack Overflow** for the developer survey data
-- **Kaggle** community for datasets and inspiration
-- **Streamlit** team for the amazing framework
-- **scikit-learn** developers for ML tools
-
----
-
 ## 📞 Contact & Support
 
 - **GitHub Issues:** [Report bugs or request features](https://github.com/kareemtaha3/AI-Powered-HR-Analytics-Dashboard/issues)
